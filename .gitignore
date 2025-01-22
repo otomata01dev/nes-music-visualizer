@@ -1,1 +1,9 @@
 *.code-workspace
+build/*
+!build/.keep
+lib/*
+!lib/.keep
+chr/*
+!chr/.keep
+music/*
+!music/.keep
