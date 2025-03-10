@@ -1,11 +1,35 @@
+.segment "CODE"
+; FamiStudioのセットアップ
+FAMISTUDIO_CFG_EXTERNAL       = 1
+FAMISTUDIO_CFG_DPCM_SUPPORT   = 1
+FAMISTUDIO_CFG_SFX_SUPPORT    = 1
+FAMISTUDIO_CFG_SFX_STREAMS    = 2
+FAMISTUDIO_CFG_EQUALIZER      = 1
+FAMISTUDIO_USE_VOLUME_TRACK   = 1
+FAMISTUDIO_USE_VOLUME_SLIDES  = 1
+FAMISTUDIO_USE_PITCH_TRACK    = 1
+FAMISTUDIO_USE_SLIDE_NOTES    = 1
+FAMISTUDIO_USE_VIBRATO        = 1
+FAMISTUDIO_USE_ARPEGGIO       = 1
+FAMISTUDIO_CFG_SMOOTH_VIBRATO = 1
+FAMISTUDIO_USE_RELEASE_NOTES  = 1
+FAMISTUDIO_DPCM_OFF           = $e000
+
+FAMISTUDIO_CFG_C_BINDINGS = 1
+
+.define FAMISTUDIO_CA65_ZP_SEGMENT   ZEROPAGE
+.define FAMISTUDIO_CA65_RAM_SEGMENT  BSS
+.define FAMISTUDIO_CA65_CODE_SEGMENT CODE
+
+.include "../lib/famistudio.s"
+
 .segment "RODATA"
 ; 音源データの読み込み
-; music_data:
+	.include "../music/song.s"
 
-; sounds_data:
-	
 .segment "SAMPLES"
 ; DPCM関連のデータ読み込み
+	.incbin "../music/song.dmc"
 
 .segment "CHARS"
 ; グラフィックデータの読み込み
