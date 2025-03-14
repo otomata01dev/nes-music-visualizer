@@ -23,6 +23,8 @@ FAMISTUDIO_CFG_C_BINDINGS = 1
 
 .include "../lib/famistudio.s"
 
+.include "../lib/visualizer.s"
+
 .segment "RODATA"
 ; 音源データの読み込み
 	.include "../music/song.s"
