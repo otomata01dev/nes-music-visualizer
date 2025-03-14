@@ -3,6 +3,8 @@ build/*
 !build/.keep
 lib/*
 !lib/.keep
+!lib/visualizer.h
+!lib/visualizer.s
 chr/*
 !chr/.keep
 music/*
