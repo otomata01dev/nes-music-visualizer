@@ -91,16 +91,50 @@ void volume_bar_update() {
     }
 }
 
+const unsigned char channel_keyboard_y[3] = {112, 144, 176};
+const unsigned char channel_sprite_id[3] = {0, 4, 8};
+const unsigned char key_tile[12] = {0xC0, 0xC8, 0xC2, 0xC8, 0xC4, 0xC6, 0xC8, 0xC2, 0xC8, 0xC2, 0xC8, 0xC4};
+const unsigned char key_size[12]  = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1};
+const unsigned char key_offset[12] = {0, 1, 2, 4, 5, 8, 10, 11, 13, 14, 16, 17};
+
+// 入力されたノート番号を元にスプライトを表示
+void highlight_key_sprite(unsigned char channel) {
+    unsigned char note = visualizer_get_note(channel);
+    unsigned char octave = (note - 1) / 12;
+    unsigned char key_index = (note - 1) % 12;
+
+    unsigned char sprite_x = 17 + (octave * 32) + key_index + key_offset[key_index] - 32;
+    unsigned char sprite_y = channel_keyboard_y[channel] - 1;
+
+    oam_size(1);
+
+    if (note == 0) {
+        oam_spr(sprite_x, -1, key_tile[key_index], 2&3, channel_sprite_id[channel]);
+    } else {
+        oam_spr(sprite_x, sprite_y, key_tile[key_index], 2&3, channel_sprite_id[channel]);
+    }
+}
+
+void sprite_update() {
+    int i;
+    for (i = 0; i < 3; i++) {
+        highlight_key_sprite(i);
+    }
+}
+
 // 画面表示のセットアップ関数
 void setup_graphics() {
     ppu_off(); // PPUをオフにする
 
     pal_bg((const char *)main_pal);
+    pal_spr((const char *)main_pal);
 
     vram_adr(NAMETABLE_A);
     vram_write((unsigned char *)main_nam, 1024);
 
     put_str(NTADR_A(6, 6), "Music Player for NES!"); // 画面に文字列を表示
+
+    oam_clear();
 
     ppu_on_all(); // PPUをオンにする
 }
@@ -144,5 +178,6 @@ void main() {
         check_input();
         famistudio_update();
         volume_bar_update();
+        sprite_update();
     }
 }
