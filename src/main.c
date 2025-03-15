@@ -35,86 +35,71 @@ unsigned char volume_vram_buffer[11*5+1] = {
     NT_UPD_EOF
 };
 
-unsigned char prev_volume_square1 = 0;
-unsigned char prev_volume_square2 = 0;
-unsigned char prev_volume_triangle = 0;
-unsigned char prev_volume_noise = 0;
-unsigned char prev_volume_dpcm = 0;
+// 音量バーの前回の音量
+unsigned char prev_volume[5] = {0, 0, 0, 0, 0};
 
+// 音量バーのVRAMバッファのオフセット
+const unsigned char volume_vram_buffer_index_offset[5] = {3, 14, 25, 36, 47};
+
+// 音量バーのVRAMバッファの更新関数
+void update_volume_vram_buffer(unsigned char channel, unsigned char volume) {
+    unsigned char i;
+    unsigned char buffer_index = volume_vram_buffer_index_offset[channel];
+    
+    if (prev_volume[channel] == volume) return;
+
+    for (i = 0; i < 8; i++) {
+        volume_vram_buffer[buffer_index + i] = i < volume ? 0x0E : 0x0F;
+    }
+
+    prev_volume[channel] = volume;
+}
+
+// 音量バーの更新関数
 void volume_bar_update() {
-    unsigned char volume_square1 = visualizer_get_volume(0);
-    unsigned char volume_square2 = visualizer_get_volume(1);
-    unsigned char volume_triangle = visualizer_get_volume(2);
-    unsigned char volume_noise = visualizer_get_volume(3);
-    unsigned char volume_dpcm = visualizer_get_volume(4);
-    int i;
+    unsigned char volume;
+    unsigned char i;
 
-    for (i = 0; i < 8; i++) {
-        if (prev_volume_square1 == volume_square1) break;
-        volume_vram_buffer[3 + i] = i < volume_square1 ? 0x0E : 0x0F;
-    }
-
-    for (i = 0; i < 8; i++) {
-        if (prev_volume_square2 == volume_square2) break;
-        volume_vram_buffer[14 + i] = i < volume_square2 ? 0x0E : 0x0F;
-    }
-
-    for (i = 0; i < 8; i++) {
-        if (prev_volume_triangle == volume_triangle) break;
-        volume_vram_buffer[25 + i] = i < volume_triangle ? 0x0E : 0x0F;
-    }
-
-    for (i = 0; i < 8; i++) {
-        if (prev_volume_noise == volume_noise) break;
-        volume_vram_buffer[36 + i] = i < volume_noise ? 0x0E : 0x0F;
-    }
-
-    for (i = 0; i < 8; i++) {
-        if (prev_volume_dpcm == volume_dpcm) break;
-        volume_vram_buffer[47 + i] = i < volume_dpcm ? 0x0E : 0x0F;
-    }
-
-    if (volume_square1 != prev_volume_square1) {
-        prev_volume_square1 = volume_square1;
-    }
-    if (volume_square2 != prev_volume_square2) {
-        prev_volume_square2 = volume_square2;
-    }
-    if (volume_triangle != prev_volume_triangle) {
-        prev_volume_triangle = volume_triangle;
-    }
-    if (volume_noise != prev_volume_noise) {
-        prev_volume_noise = volume_noise;
-    }
-    if (volume_dpcm != prev_volume_dpcm) {
-        prev_volume_dpcm = volume_dpcm;
+    // 各チャンネルの音量を取得し、VRAMバッファを更新
+    for (i = 0; i < 5; i++) {
+        volume = visualizer_get_volume(i);
+        update_volume_vram_buffer(i, volume);
     }
 }
 
-const unsigned char channel_keyboard_y[3] = {112, 144, 176};
-const unsigned char channel_sprite_id[3] = {0, 4, 8};
-const unsigned char key_tile[12] = {0xC0, 0xC8, 0xC2, 0xC8, 0xC4, 0xC6, 0xC8, 0xC2, 0xC8, 0xC2, 0xC8, 0xC4};
-const unsigned char key_size[12]  = {1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1};
-const unsigned char key_offset[12] = {0, 1, 2, 4, 5, 8, 10, 11, 13, 14, 16, 17};
+// 鍵盤スプライトの描画に関する定数
+const unsigned char channel_keyboard_y[3] = {112, 144, 176}; // 各チャンネルの鍵盤スプライトのY座標
+const unsigned char channel_sprite_id[3] = {0, 4, 8}; // 各チャンネルのスプライトID
+const unsigned char key_tile[12] = { // 鍵盤スプライトのタイル番号
+    0xC0, 0xC8, 0xC2, 0xC8, 0xC4, 0xC6, 0xC8, 0xC2, 0xC8, 0xC2, 0xC8, 0xC4
+};
+const unsigned char key_offset[12] = { // 鍵盤スプライトのX座標のオフセット
+    0, 1, 2, 4, 5, 8, 10, 11, 13, 14, 16, 17
+};
 
 // 入力されたノート番号を元にスプライトを表示
 void highlight_key_sprite(unsigned char channel) {
-    unsigned char note = visualizer_get_note(channel);
-    unsigned char octave = (note - 1) / 12;
-    unsigned char key_index = (note - 1) % 12;
+    unsigned char pitch_num = visualizer_get_note_pitch_num(channel); // 再生中ノートの音程番号を取得
+    unsigned char octave = (pitch_num - 1) / 12; // オクターブ番号を取得
+    unsigned char key_index = (pitch_num - 1) % 12; // キー番号を取得
 
+    // 各チャンネルのスプライトを描画する座標を計算
+    // x座標
     unsigned char sprite_x = 17 + (octave * 32) + key_index + key_offset[key_index] - 32;
+    // y座標、ファミコンのスプライト描画の仕様上y座標が1ピクセルずれるため-1をする
     unsigned char sprite_y = channel_keyboard_y[channel] - 1;
 
-    oam_size(1);
-
-    if (note == 0) {
+    // スプライトの描画
+    if (pitch_num == 0) {
+        // 音程番号が0 = 音がなっていない場合はスプライトを非表示(画面外描画)にする
         oam_spr(sprite_x, -1, key_tile[key_index], 2&3, channel_sprite_id[channel]);
     } else {
+        // 音程番号が0以外 = 音がなっている場合はスプライトを表示
         oam_spr(sprite_x, sprite_y, key_tile[key_index], 2&3, channel_sprite_id[channel]);
     }
 }
 
+// スプライトの更新関数
 void sprite_update() {
     int i;
     for (i = 0; i < 3; i++) {
@@ -126,15 +111,19 @@ void sprite_update() {
 void setup_graphics() {
     ppu_off(); // PPUをオフにする
 
+    // パレットの設定
     pal_bg((const char *)main_pal);
     pal_spr((const char *)main_pal);
 
+    // タイルの設定
     vram_adr(NAMETABLE_A);
     vram_write((unsigned char *)main_nam, 1024);
 
     put_str(NTADR_A(6, 6), "Music Player for NES!"); // 画面に文字列を表示
 
+    // スプライトの設定
     oam_clear();
+    oam_size(1);
 
     ppu_on_all(); // PPUをオンにする
 }
