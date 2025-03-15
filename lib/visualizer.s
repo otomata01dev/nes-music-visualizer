@@ -3,8 +3,9 @@
 ; 引数 x: チャンネル番号 (Sq1=0, Sq2=1, Tri=2, Noise=3, DPCM=4)
 ;
 ; 該当チャンネルで発音されているノート番号(音程)を取得
-.export _visualizer_get_note
-.proc _visualizer_get_note
+; 戻り値: ノート番号(音程): 1-96、未発音時は0
+.export _visualizer_get_note_pitch_num
+.proc _visualizer_get_note_pitch_num
     tax
     lda famistudio_chn_note, x
     rts
