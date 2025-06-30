@@ -1,5 +1,4 @@
 # ファミコン用音楽プレーヤー
-[![nes-music-visualizer](https://i.gyazo.com/d33e327d3c5b36f1e858c00c57a270a0.png)](https://gyazo.com/d33e327d3c5b36f1e858c00c57a270a0)
 ファミコン或いはエミュレータ等で動作する音楽プレーヤーソフトです。
 外部ライブラリやグラフィック、音源アセットはありません。
 エミュレータMesenで動作確認済み。
